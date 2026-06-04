@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.gamma.agentkernel</groupId>
+    <artifactId>agent-kernel-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>agent-kernel-core</artifactId>
+  <name>agent-kernel-core</name>
+  <description>
+    RING 1 — the pure, framework-agnostic agent core. ZERO runtime dependencies (JDK only);
+    JUnit is test-scope only. The build FAILS if any compile/runtime dependency is added
+    (enforced below). See docs/adr/adr-0001-framework-agnostic-zero-dep-core.md.
+  </description>
+
+  <dependencies>
+    <!-- TEST ONLY. No compile/runtime dependency is permitted in ring-1. -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- The ring-1 guarantee, enforced at build time: ban every compile/runtime dependency
+           (direct or transitive). Test-scope deps (JUnit) are not matched, so they are allowed. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce-no-runtime-deps</id>
+            <goals><goal>enforce</goal></goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <message>
+                    agent-kernel-core is RING 1 and must have ZERO compile/runtime dependencies
+                    (ADR-0001). Move anything you need into a ring-2 companion module.
+                  </message>
+                  <excludes>
+                    <exclude>*:*:*:*:compile</exclude>
+                    <exclude>*:*:*:*:runtime</exclude>
+                  </excludes>
+                </bannedDependencies>
+              </rules>
+              <failFast>true</failFast>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

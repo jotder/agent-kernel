@@ -1,0 +1,9 @@
+# agent-kernel code owners.
+# The kernel is maintained by a small set; consuming apps (UCC, CVVE, CxO) file issues here.
+# Replace with real GitHub handles/teams when the org team is set up.
+
+*           @jotder
+
+# Ring 1 is load-bearing for every consumer — guard it closely.
+/agent-kernel-core/    @jotder
+/docs/adr/             @jotder

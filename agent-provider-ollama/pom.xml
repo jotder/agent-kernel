@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.gamma.agentkernel</groupId>
+    <artifactId>agent-kernel-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>agent-provider-ollama</artifactId>
+  <name>agent-provider-ollama</name>
+  <description>
+    RING 2 — a ModelProvider backed by local Ollama (via langchain4j-ollama). Opt-in companion;
+    its heavy deps never reach ring-1. K0 ships the skeleton (depends on core only); K1 adds the
+    langchain4j-ollama dependency (pinned in the parent) when OllamaModelProvider is implemented.
+  </description>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.gamma.agentkernel</groupId>
+      <artifactId>agent-kernel-core</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- K1: uncomment when OllamaModelProvider is implemented (version pinned in parent depMgmt).
+    <dependency>
+      <groupId>dev.langchain4j</groupId>
+      <artifactId>langchain4j-ollama</artifactId>
+    </dependency>
+    -->
+  </dependencies>
+
+</project>
