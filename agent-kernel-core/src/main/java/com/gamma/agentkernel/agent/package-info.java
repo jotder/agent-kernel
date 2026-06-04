@@ -3,6 +3,6 @@
  * {@code CapabilityRegistry}, {@code AgentContext}. A capability orchestrates tools and narrates;
  * authors read their tier via {@code ctx.effectiveTier(spec.defaultTier())} so escalation can raise it.
  *
- * <p>K0 skeleton — types are added in K1.
+ * <p>Implemented in K1.
  */
 package com.gamma.agentkernel.agent;

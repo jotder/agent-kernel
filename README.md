@@ -49,5 +49,7 @@ via GitHub Actions using the built-in `GITHUB_TOKEN`. Apps **pin** concrete vers
 
 ## Status
 
-**K0 (bootstrap) — in progress.** Ring-1 package skeleton compiles; ring-1 types and the eval harness land
-in **K1**. Companion modules and the `1.0` freeze are **R1** (driven by the 2nd consumer).
+**K1 complete.** Ring-1 core (model/tool/agent/reason/error/observe/retrieve), `agent-provider-ollama`,
+and the `agent-eval` harness are implemented and tested (`./mvnw -B verify` green, zero apps, ring-1
+zero-dep). Companion modules, the assembled orchestrator, and the `1.0` freeze are **R1** (driven by the
+2nd consumer). UCC consumes this `0.x` at U1.

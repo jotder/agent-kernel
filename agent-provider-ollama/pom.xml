@@ -30,12 +30,10 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- K1: uncomment when OllamaModelProvider is implemented (version pinned in parent depMgmt).
     <dependency>
       <groupId>dev.langchain4j</groupId>
       <artifactId>langchain4j-ollama</artifactId>
     </dependency>
-    -->
   </dependencies>
 
 </project>

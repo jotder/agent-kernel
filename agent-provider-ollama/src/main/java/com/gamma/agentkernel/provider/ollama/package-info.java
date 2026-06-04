@@ -3,6 +3,6 @@
  * {@code ModelProfile} wiring ported from UCC. Lazy and abstain-safe: reports unavailable until a
  * deployment turns the assist layer on.
  *
- * <p>K0 skeleton — {@code OllamaModelProvider} is added in K1.
+ * <p>Implemented in K1.
  */
 package com.gamma.agentkernel.provider.ollama;

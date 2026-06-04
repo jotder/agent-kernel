@@ -1,0 +1,26 @@
+[
+  {
+    "name": "echoes-input",
+    "capabilityId": "echo",
+    "input": { "capabilityId": "echo", "userText": "hello world" },
+    "expect": {
+      "status": "OK",
+      "requiredDataKeys": ["echo"],
+      "requiredEvidenceRefs": ["echo:src"],
+      "mustValidate": true,
+      "minConfidence": 0.5
+    }
+  },
+  {
+    "name": "abstains-when-empty",
+    "capabilityId": "echo",
+    "input": { "capabilityId": "echo", "userText": "" },
+    "expect": { "mustAbstainWhenNoData": true }
+  },
+  {
+    "name": "unknown-capability-unsupported",
+    "capabilityId": "nope",
+    "input": { "capabilityId": "nope", "userText": "x" },
+    "expect": { "status": "UNSUPPORTED" }
+  }
+]

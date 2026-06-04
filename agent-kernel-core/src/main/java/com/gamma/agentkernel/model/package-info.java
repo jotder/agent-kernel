@@ -3,6 +3,6 @@
  * {@code ModelProvider}, {@code ModelRouter}, {@code ModelProfile}. Ring-1: the {@code ModelProvider}
  * SPI is our own interface; concrete providers (Ollama, LangChain4j) live in ring-2 companions.
  *
- * <p>K0 skeleton — types are added in K1.
+ * <p>Implemented in K1.
  */
 package com.gamma.agentkernel.model;
