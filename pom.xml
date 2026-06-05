@@ -18,6 +18,7 @@
 
   <modules>
     <module>agent-kernel-core</module>
+    <module>agent-orchestration</module>
     <module>agent-provider-ollama</module>
     <module>agent-eval</module>
   </modules>
@@ -45,6 +46,11 @@
       <dependency>
         <groupId>com.gamma.agentkernel</groupId>
         <artifactId>agent-kernel-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.gamma.agentkernel</groupId>
+        <artifactId>agent-orchestration</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

@@ -8,8 +8,10 @@ import java.util.Set;
 
 /**
  * The id→{@link Capability} table. {@link #dispatch} resolves the request's capability id and runs it;
- * an unknown id yields {@link AgentResult#unsupported(String)}. This is plain dispatch — the assembled
- * orchestration pipeline (escalation/grounding/audit) is deferred to R1.
+ * an unknown id yields {@link AgentResult#unsupported(String)}. This is <em>plain</em> dispatch — no
+ * confidence/escalation/audit. The assembled <em>synchronous</em> pipeline is the {@code SyncOrchestrator}
+ * in the ring-2 {@code agent-orchestration} module (R1; ADR-0009); the async/streaming orchestrator
+ * variants remain deferred until a second consumer (CVVE/CxO) shapes them.
  */
 public interface CapabilityRegistry {
 

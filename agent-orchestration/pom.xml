@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.gamma.agentkernel</groupId>
+    <artifactId>agent-kernel-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>agent-orchestration</artifactId>
+  <name>agent-orchestration</name>
+  <description>
+    RING 2 — the assembled orchestrator(s) over the ring-1 ingredients (CapabilityRegistry,
+    EscalationPolicy, ConfidenceEstimator, AuditSink). K1 deferred the assembled pipeline to R1;
+    this module ships the SYNCHRONOUS variant first (the pipeline UCC hand-rolled in its module:
+    resolve capability -> escalate with confidence estimation -> emit one AgentCompleted). It is
+    PURE: it depends only on agent-kernel-core (no infra deps). The async/streaming variants are
+    added when a second consumer (CVVE/CxO) shapes them. See docs/adr/adr-0009-sync-orchestrator.md.
+  </description>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.gamma.agentkernel</groupId>
+      <artifactId>agent-kernel-core</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- Keep this companion PURE: the only compile/runtime dependency allowed is agent-kernel-core.
+           Any infra dep (Spring, Postgres, a model SDK) belongs in its own ring-2 module, not here. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce-core-only</id>
+            <goals><goal>enforce</goal></goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <message>
+                    agent-orchestration is a PURE ring-2 companion: its only compile/runtime
+                    dependency may be agent-kernel-core. Put infra deps in their own module.
+                  </message>
+                  <excludes>
+                    <exclude>*:*:*:*:compile</exclude>
+                    <exclude>*:*:*:*:runtime</exclude>
+                  </excludes>
+                  <includes>
+                    <include>com.gamma.agentkernel:agent-kernel-core</include>
+                  </includes>
+                </bannedDependencies>
+              </rules>
+              <failFast>true</failFast>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
