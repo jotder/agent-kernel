@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.gamma.agentkernel</groupId>
+    <artifactId>agent-kernel-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>agent-kernel-spring</artifactId>
+  <name>agent-kernel-spring</name>
+  <description>
+    RING 2 — a Spring Boot auto-configuration companion that assembles the ring-1 ingredients into a
+    ready-to-inject agent runtime: it collects the application's Capability beans into a
+    CapabilityRegistry and wires a SyncOrchestrator (from agent-orchestration) over an EscalationPolicy,
+    a ConfidenceEstimator, and an AuditSink — each with a sensible default the app overrides by simply
+    declaring its own bean (@ConditionalOnMissingBean). Opt-in: the Spring dependencies are `provided`,
+    so a consumer brings its own Spring Boot at runtime and ring-1 core never sees Spring. First shaped
+    by the CxO consumer (R1). See docs/adr/adr-0010-spring-companion.md.
+  </description>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.gamma.agentkernel</groupId>
+      <artifactId>agent-kernel-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.gamma.agentkernel</groupId>
+      <artifactId>agent-orchestration</artifactId>
+    </dependency>
+
+    <!-- Spring wiring. `provided`: required to compile the auto-config, but the consuming application
+         supplies its own Spring Boot at runtime (and these never leak transitively onto consumers). -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-autoconfigure</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- Test: drive the auto-config through a real (app-free) ApplicationContext. -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+</project>

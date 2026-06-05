@@ -19,6 +19,7 @@
   <modules>
     <module>agent-kernel-core</module>
     <module>agent-orchestration</module>
+    <module>agent-kernel-spring</module>
     <module>agent-provider-ollama</module>
     <module>agent-eval</module>
   </modules>
@@ -32,6 +33,10 @@
     <junit.version>5.10.2</junit.version>
     <langchain4j.version>1.15.1</langchain4j.version>
     <jackson.version>2.18.3</jackson.version>
+    <!-- Spring Boot: consumed ONLY by the ring-2 agent-kernel-spring companion (R1), never by ring-1
+         core. Pinned to the version the CxO consumer runs (Spring Boot 3.5.3); the companion declares
+         Spring deps as `provided` so a consumer supplies its own at runtime. -->
+    <spring-boot.version>3.5.3</spring-boot.version>
 
     <!-- Plugin versions. -->
     <compiler.plugin.version>3.13.0</compiler.plugin.version>
@@ -55,15 +60,32 @@
       </dependency>
       <dependency>
         <groupId>com.gamma.agentkernel</groupId>
+        <artifactId>agent-kernel-spring</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.gamma.agentkernel</groupId>
         <artifactId>agent-eval</artifactId>
         <version>${project.version}</version>
       </dependency>
 
-      <!-- Test (all modules). -->
+      <!-- Test (all modules). Declared BEFORE the Spring Boot BOM so this JUnit version wins
+           (dependencyManagement is first-declaration-wins). -->
       <dependency>
         <groupId>org.junit</groupId>
         <artifactId>junit-bom</artifactId>
         <version>${junit.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <!-- Spring Boot BOM: manages spring-context / spring-boot-autoconfigure / spring-boot-test /
+           assertj versions for the ring-2 agent-kernel-spring companion only. Pure management — it
+           adds no actual dependency to any module (ring-1 core declares none of these). -->
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>${spring-boot.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
