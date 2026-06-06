@@ -4,7 +4,7 @@ All notable changes to **agent-kernel** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 this project follows an **independent SemVer line** (unstable `0.x` until a 2nd consumer reshapes the API).
 
-## [1.1.0] — Unreleased
+## [1.1.0] — 2026-06-06
 
 Additive batch closing the human-in-the-loop **return** path, driven by CVVE's six build slices (the first
 real `HumanHandoff` consumer). All non-breaking — no 1.0 type changed shape; consumers opt in by bumping.
