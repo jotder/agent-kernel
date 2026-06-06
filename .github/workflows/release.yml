@@ -1,0 +1,41 @@
+name: Release
+
+# Publishes the agent-kernel reactor (all 7 modules) to GitHub Packages (Maven) when a vN.N.N tag is
+# pushed. distributionManagement (server id `github`) is wired in the parent pom; setup-java writes the
+# matching settings.xml and the repo's GITHUB_TOKEN (packages: write) authenticates the deploy. Tests run
+# in ci.yml on every push — the release job skips them and just builds + uploads the artifacts.
+#
+# Trigger: push a tag like `v1.1.0` (the tag commit must contain this workflow). workflow_dispatch is
+# provided for manual re-runs against a ref that already carries this file.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+          server-id: github
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+
+      - name: Publish to GitHub Packages
+        run: mvn --batch-mode --no-transfer-progress -DskipTests deploy
+        env:
+          MAVEN_USERNAME: ${{ github.actor }}
+          MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
