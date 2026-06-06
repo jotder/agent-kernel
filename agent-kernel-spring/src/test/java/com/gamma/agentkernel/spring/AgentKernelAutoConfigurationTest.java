@@ -7,8 +7,11 @@ import com.gamma.agentkernel.agent.Capability;
 import com.gamma.agentkernel.agent.CapabilityRegistry;
 import com.gamma.agentkernel.agent.CapabilitySpec;
 import com.gamma.agentkernel.model.ModelTier;
+import com.gamma.agentkernel.model.ModelRouter;
 import com.gamma.agentkernel.observe.AuditSink;
 import com.gamma.agentkernel.observe.RingBufferAuditSink;
+import com.gamma.agentkernel.orchestrate.AgentStreamListener;
+import com.gamma.agentkernel.orchestrate.StreamingOrchestrator;
 import com.gamma.agentkernel.orchestrate.SyncOrchestrator;
 import com.gamma.agentkernel.reason.ConfidenceEstimator;
 import com.gamma.agentkernel.reason.EscalationPolicy;
@@ -20,6 +23,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,10 +47,15 @@ class AgentKernelAutoConfigurationTest {
     void assemblesOrchestratorAndDispatchesACapabilityBean() {
         runner.withUserConfiguration(EchoConfig.class).run(ctx -> {
             assertThat(ctx).hasSingleBean(SyncOrchestrator.class)
+                    .hasSingleBean(StreamingOrchestrator.class)
                     .hasSingleBean(CapabilityRegistry.class)
                     .hasSingleBean(ConfidenceEstimator.class)
                     .hasSingleBean(EscalationPolicy.class)
+                    .hasSingleBean(ModelRouter.class)
                     .hasSingleBean(AuditSink.class);
+
+            // The default router is abstain-safe: no provider configured ⇒ nothing available.
+            assertThat(ctx.getBean(ModelRouter.class).anyAvailable()).isFalse();
 
             assertThat(ctx.getBean(CapabilityRegistry.class).ids()).containsExactly("echo");
 
@@ -57,6 +66,27 @@ class AgentKernelAutoConfigurationTest {
             assertThat(result.status()).isEqualTo(AgentResult.Status.OK);
             assertThat(result.answer()).isEqualTo("echo: hello");
             assertThat(result.confidence()).isEqualTo(1.0); // default estimator: validated OK -> 1.0
+        });
+    }
+
+    @Test
+    void streamsViaTheAutoWiredStreamingOrchestrator() {
+        runner.withUserConfiguration(EchoConfig.class).run(ctx -> {
+            assertThat(ctx).hasSingleBean(StreamingOrchestrator.class);
+            List<String> chunks = new ArrayList<>();
+            AgentResult[] done = new AgentResult[1];
+            AgentStreamListener listener = new AgentStreamListener() {
+                @Override public void onChunk(String delta) { chunks.add(delta); }
+                @Override public void onComplete(AgentResult result) { done[0] = result; }
+            };
+
+            AgentResult result = ctx.getBean(StreamingOrchestrator.class).run(
+                    new AgentRequest("echo", Map.of(), Map.of(), "hello"), AgentContext.builder().build(),
+                    listener);
+
+            assertThat(result.status()).isEqualTo(AgentResult.Status.OK);
+            assertThat(String.join("", chunks)).isEqualTo("echo: hello");
+            assertThat(done[0]).isSameAs(result);
         });
     }
 

@@ -21,6 +21,7 @@
     <module>agent-orchestration</module>
     <module>agent-kernel-spring</module>
     <module>agent-provider-ollama</module>
+    <module>agent-provider-langchain4j</module>
     <module>agent-eval</module>
   </modules>
 
@@ -94,6 +95,11 @@
       <dependency>
         <groupId>dev.langchain4j</groupId>
         <artifactId>langchain4j-ollama</artifactId>
+        <version>${langchain4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>dev.langchain4j</groupId>
+        <artifactId>langchain4j-google-ai-gemini</artifactId>
         <version>${langchain4j.version}</version>
       </dependency>
       <dependency>

@@ -3,8 +3,11 @@ package com.gamma.agentkernel.spring;
 import com.gamma.agentkernel.agent.AgentResult;
 import com.gamma.agentkernel.agent.Capability;
 import com.gamma.agentkernel.agent.CapabilityRegistry;
+import com.gamma.agentkernel.model.ModelProvider;
+import com.gamma.agentkernel.model.ModelRouter;
 import com.gamma.agentkernel.observe.AuditSink;
 import com.gamma.agentkernel.observe.RingBufferAuditSink;
+import com.gamma.agentkernel.orchestrate.StreamingOrchestrator;
 import com.gamma.agentkernel.orchestrate.SyncOrchestrator;
 import com.gamma.agentkernel.reason.ConfidenceEstimator;
 import com.gamma.agentkernel.reason.EscalationPolicy;
@@ -82,6 +85,18 @@ public class AgentKernelAutoConfiguration {
         return new RingBufferAuditSink(DEFAULT_AUDIT_CAPACITY);
     }
 
+    /**
+     * The default model router: every tier resolves to {@link ModelProvider#unavailable} so capabilities
+     * degrade gracefully to "model unavailable" out of the box. An app that uses a model declares its own
+     * {@code ModelRouter} bean (e.g. CxO's Gemini router from {@code agent-provider-langchain4j}, or the
+     * Ollama router), and this backs off.
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public ModelRouter agentModelRouter() {
+        return ModelRouter.of(ModelProvider.unavailable("no model provider configured"));
+    }
+
     /** The assembled synchronous orchestrator: resolve → escalate(estimate, rungs) → audit. */
     @Bean
     @ConditionalOnMissingBean
@@ -89,5 +104,18 @@ public class AgentKernelAutoConfiguration {
                                              ConfidenceEstimator estimator,
                                              EscalationPolicy escalation) {
         return new SyncOrchestrator(registry, estimator, escalation);
+    }
+
+    /**
+     * The assembled streaming orchestrator: the same pipeline as {@link #syncOrchestrator} but emitting the
+     * answer progressively to an {@code AgentStreamListener} (result-granularity streaming; ADR-0012). Lets
+     * a consumer expose an SSE/chat surface over the same neutral pipeline and audit.
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public StreamingOrchestrator streamingOrchestrator(CapabilityRegistry registry,
+                                                       ConfidenceEstimator estimator,
+                                                       EscalationPolicy escalation) {
+        return new StreamingOrchestrator(registry, estimator, escalation);
     }
 }
