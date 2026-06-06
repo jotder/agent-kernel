@@ -22,6 +22,7 @@
     <module>agent-kernel-spring</module>
     <module>agent-provider-ollama</module>
     <module>agent-provider-langchain4j</module>
+    <module>agent-store-postgres</module>
     <module>agent-eval</module>
   </modules>
 
@@ -62,6 +63,11 @@
       <dependency>
         <groupId>com.gamma.agentkernel</groupId>
         <artifactId>agent-kernel-spring</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.gamma.agentkernel</groupId>
+        <artifactId>agent-store-postgres</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

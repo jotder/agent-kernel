@@ -12,6 +12,7 @@ import com.gamma.agentkernel.orchestrate.SyncOrchestrator;
 import com.gamma.agentkernel.reason.ConfidenceEstimator;
 import com.gamma.agentkernel.reason.EscalationPolicy;
 import com.gamma.agentkernel.reason.EscalationRung;
+import com.gamma.agentkernel.retrieve.Retriever;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -95,6 +96,18 @@ public class AgentKernelAutoConfiguration {
     @ConditionalOnMissingBean
     public ModelRouter agentModelRouter() {
         return ModelRouter.of(ModelProvider.unavailable("no model provider configured"));
+    }
+
+    /**
+     * The default retriever: {@link Retriever#NONE} (no grounding) so the agent runs without RAG out of the
+     * box. An app that wants retrieval declares its own {@code Retriever} bean — e.g. CxO's pgvector
+     * retriever from {@code agent-store-postgres} — and this backs off. Wire it into a capability's
+     * {@code AgentContext} via {@code AgentContext.builder().retriever(...)}.
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public Retriever agentRetriever() {
+        return Retriever.NONE;
     }
 
     /** The assembled synchronous orchestrator: resolve → escalate(estimate, rungs) → audit. */

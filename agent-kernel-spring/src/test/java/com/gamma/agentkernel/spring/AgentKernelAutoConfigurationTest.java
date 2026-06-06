@@ -16,6 +16,7 @@ import com.gamma.agentkernel.orchestrate.SyncOrchestrator;
 import com.gamma.agentkernel.reason.ConfidenceEstimator;
 import com.gamma.agentkernel.reason.EscalationPolicy;
 import com.gamma.agentkernel.reason.EscalationRung;
+import com.gamma.agentkernel.retrieve.Retriever;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -52,10 +53,13 @@ class AgentKernelAutoConfigurationTest {
                     .hasSingleBean(ConfidenceEstimator.class)
                     .hasSingleBean(EscalationPolicy.class)
                     .hasSingleBean(ModelRouter.class)
+                    .hasSingleBean(Retriever.class)
                     .hasSingleBean(AuditSink.class);
 
             // The default router is abstain-safe: no provider configured ⇒ nothing available.
             assertThat(ctx.getBean(ModelRouter.class).anyAvailable()).isFalse();
+            // The default retriever is the no-grounding NONE: it returns nothing.
+            assertThat(ctx.getBean(Retriever.class).retrieve("anything", null)).isEmpty();
 
             assertThat(ctx.getBean(CapabilityRegistry.class).ids()).containsExactly("echo");
 
