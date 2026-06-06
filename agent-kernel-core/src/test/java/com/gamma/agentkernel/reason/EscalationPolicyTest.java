@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -71,6 +72,39 @@ class EscalationPolicyTest {
         assertEquals(AgentResult.Status.UNAVAILABLE, r.status());
         assertEquals("human-handoff", r.data().get("escalation"));
         assertEquals("review-queue", r.data().get("queue"));
+    }
+
+    /**
+     * 1.1 (ADR-0015): the handoff result is self-describing — it carries the candidate attempt's payload
+     * (data + answer + rationale) so a HITL consumer need not recompute it, while still exposing the
+     * escalation routing keys.
+     */
+    @Test
+    void humanHandoffCarriesTheCandidatePayload() {
+        CapabilitySpec spec = new CapabilitySpec("validate", 3, "draft", ModelTier.SMALL, 0.8,
+                Duration.ofSeconds(1), Set.of(), Set.of());
+        Capability cap = new Capability() {
+            @Override public CapabilitySpec spec() { return spec; }
+            @Override public AgentResult run(AgentRequest req, AgentContext ctx) {
+                return AgentResult.draft("validate", 3, "2 fields failed", List.of(), List.of(),
+                        "rule check", 0.0, ModelTier.SMALL, Map.of("fieldErrors", List.of("email", "age")));
+            }
+        };
+
+        AgentResult r = new EscalationPolicy(List.of(new EscalationRung.HumanHandoff("hitl")))
+                .run(cap, new AgentRequest("validate", null, null, null),
+                        AgentContext.builder().build(), (req, cand, ctx) -> 0.4);
+
+        assertEquals(AgentResult.Status.UNAVAILABLE, r.status());
+        // routing keys still present (back-compat with 1.0 readers)...
+        assertEquals("human-handoff", r.data().get("escalation"));
+        assertEquals("hitl", r.data().get("queue"));
+        // ...plus the candidate's own data + answer + rationale now ride through.
+        assertEquals(List.of("email", "age"), r.data().get("fieldErrors"));
+        assertEquals("2 fields failed", r.answer());
+        assertEquals("rule check", r.rationale());
+        assertEquals(0.4, r.confidence(), 1e-9);
+        assertEquals(3, r.version());
     }
 
     @Test

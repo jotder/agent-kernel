@@ -6,6 +6,7 @@ import com.gamma.agentkernel.agent.AgentResult;
 import com.gamma.agentkernel.agent.Capability;
 import com.gamma.agentkernel.agent.CapabilityRegistry;
 import com.gamma.agentkernel.observe.AgentCompleted;
+import com.gamma.agentkernel.observe.HumanDecided;
 import com.gamma.agentkernel.reason.ConfidenceEstimator;
 import com.gamma.agentkernel.reason.EscalationPolicy;
 
@@ -65,6 +66,32 @@ public final class SyncOrchestrator {
                 ? AgentResult.unsupported(request.capabilityId())
                 : escalation.run(capability, request, ctx, estimator);
         ctx.audit().emit(Orchestrations.completed(request, result, startNanos));
+        return result;
+    }
+
+    /**
+     * Resume a case after a human reviewer's decision — the "return" half of the {@code HumanHandoff} loop
+     * (1.1, ADR-0015). Re-dispatches the corrected {@code request} through the full pipeline (resolve →
+     * escalate → audit one {@link AgentCompleted}), then emits one {@link HumanDecided} so the human's action
+     * lands in the same audit stream as the machine decision. Returns the neutral re-run result for the
+     * caller to map.
+     *
+     * <p>The caller builds the corrected request — applying the reviewer's field corrections and supplying
+     * confidence that clears the threshold (a human verified it) so the re-run is accepted rather than parked
+     * again. The kernel stays neutral about an app's correction semantics; it only blesses the round-trip
+     * (re-run + closing audit) so consumers stop hand-rolling it. A terminal approve/reject that does
+     * <em>not</em> re-run needs no orchestration: emit {@code HumanDecided.of(...)} on the audit sink directly.
+     *
+     * @param decision  a short, app-defined label for the decision (e.g. {@code "CORRECT"})
+     * @param reviewer  who decided (an id/handle)
+     * @param reference an opaque correlation id (e.g. the request or parked-case id)
+     */
+    public AgentResult resume(AgentRequest request, AgentContext ctx, String decision, String reviewer,
+                              String reference) {
+        Objects.requireNonNull(request, "request");
+        Objects.requireNonNull(ctx, "ctx");
+        AgentResult result = run(request, ctx);
+        ctx.audit().emit(HumanDecided.of(request.capabilityId(), decision, reviewer, reference));
         return result;
     }
 }

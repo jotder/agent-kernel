@@ -4,6 +4,32 @@ All notable changes to **agent-kernel** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 this project follows an **independent SemVer line** (unstable `0.x` until a 2nd consumer reshapes the API).
 
+## [1.1.0] — Unreleased
+
+Additive batch closing the human-in-the-loop **return** path, driven by CVVE's six build slices (the first
+real `HumanHandoff` consumer). All non-breaking — no 1.0 type changed shape; consumers opt in by bumping.
+See **ADR-0015**.
+
+### Added
+- **`observe.HumanDecided`** — new sealed `AgentEvent` variant recording a reviewer's terminal decision
+  (`decision` label / `reviewer` / opaque `reference`; keys-and-summaries only per ADR-0008), so the human
+  return trip lands in the same audit stream as machine `AgentCompleted` events.
+- **`SyncOrchestrator.resume(request, ctx, decision, reviewer, reference)`** — re-dispatches a corrected
+  request through the normal pipeline (one `AgentCompleted`) then emits one `HumanDecided`, blessing the
+  resume-after-human round-trip so consumers stop hand-rolling it.
+
+### Changed
+- **`EscalationRung.HumanHandoff`** now returns a **self-describing** result: the candidate attempt's
+  `answer`/`evidence`/`links`/`rationale`/`data` ride through alongside the `{escalation, queue}` routing
+  keys (1.0 carried only the routing keys), so a HITL consumer no longer recomputes the candidate. The two
+  routing keys are still present — existing readers are unaffected.
+
+### Notes
+- Adding `HumanDecided` to the sealed `AgentEvent` is non-breaking: there is no exhaustive `switch` over
+  `AgentEvent` (kernel or consumers); every sink dispatches with `instanceof` guards and ignores unknowns.
+- **Deferred:** per-capability escalation posture (the slice-5 "soft" idea) — its own ADR if a second
+  multi-capability consumer wants it.
+
 ## [Unreleased]
 
 ### Added (K0 — bootstrap)

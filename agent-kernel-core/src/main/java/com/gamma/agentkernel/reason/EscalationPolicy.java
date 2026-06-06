@@ -7,6 +7,7 @@ import com.gamma.agentkernel.agent.Capability;
 import com.gamma.agentkernel.agent.CapabilitySpec;
 import com.gamma.agentkernel.model.ModelTier;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -53,10 +54,17 @@ public final class EscalationPolicy {
                     if (accepts(result, confidence, threshold)) return result.withConfidence(confidence);
                 }
                 case EscalationRung.HumanHandoff handoff -> {
+                    // 1.1 (ADR-0015): make the parked case self-describing. Carry the candidate attempt's
+                    // payload (answer/evidence/links/rationale/data — e.g. the field errors a HITL consumer
+                    // wants to show the reviewer) into the handoff result, plus the escalation routing keys.
+                    // 1.0 only carried {escalation, queue}, forcing consumers to recompute the candidate.
+                    // Additive: the two routing keys are still present, so existing readers are unaffected.
+                    Map<String, Object> data = new LinkedHashMap<>(result.data());
+                    data.put("escalation", "human-handoff");
+                    data.put("queue", handoff.queue());
                     return new AgentResult(spec.id(), spec.version(), AgentResult.Status.UNAVAILABLE,
-                            null, List.of(), List.of(), null, confidence, false, tier, null, null,
-                            "handed off for human review",
-                            Map.of("escalation", "human-handoff", "queue", handoff.queue()));
+                            result.answer(), result.evidence(), result.links(), result.rationale(),
+                            confidence, false, tier, null, null, "handed off for human review", data);
                 }
                 case EscalationRung.Abstain ignored -> {
                     return abstain(spec, confidence, threshold);

@@ -10,6 +10,7 @@ import com.gamma.agentkernel.model.ModelTier;
 import com.gamma.agentkernel.observe.AgentCompleted;
 import com.gamma.agentkernel.observe.AgentEvent;
 import com.gamma.agentkernel.observe.AuditSink;
+import com.gamma.agentkernel.observe.HumanDecided;
 import com.gamma.agentkernel.reason.ConfidenceEstimator;
 import com.gamma.agentkernel.reason.EscalationPolicy;
 import com.gamma.agentkernel.reason.EscalationRung;
@@ -22,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -108,6 +110,27 @@ class SyncOrchestratorTest {
         assertEquals(AgentResult.Status.UNAVAILABLE, r.status(), "below-threshold abstains, not ships a guess");
         AgentCompleted e = onlyEvent(h.events());
         assertEquals(AgentResult.Status.UNAVAILABLE, e.status());
+    }
+
+    @Test
+    void resumeReRunsAndEmitsHumanDecidedAfterCompletion() {
+        // 1.1 (ADR-0015): the corrected re-run is accepted (confidence clears the bar) and produces TWO
+        // events in order — the machine re-decision, then the human-decision close-out.
+        Capability cap = new StubCapability(spec(0.5), okResult());
+        Harness h = harness(cap, (req, cand, ctx) -> 0.95,
+                new EscalationPolicy(List.of(new EscalationRung.Abstain())));
+
+        AgentResult r = h.orchestrator().resume(new AgentRequest(ID, Map.of(), Map.of(), null), h.ctx(),
+                "CORRECT", "reviewer-7", "req-123");
+
+        assertEquals(AgentResult.Status.OK, r.status(), "a human-verified correction re-runs and is accepted");
+        assertEquals(2, h.events().size(), "resume audits the re-run AND the human decision");
+        assertInstanceOf(AgentCompleted.class, h.events().get(0));
+        HumanDecided decided = assertInstanceOf(HumanDecided.class, h.events().get(1));
+        assertEquals(ID, decided.capabilityId());
+        assertEquals("CORRECT", decided.decision());
+        assertEquals("reviewer-7", decided.reviewer());
+        assertEquals("req-123", decided.reference());
     }
 
     @Test
