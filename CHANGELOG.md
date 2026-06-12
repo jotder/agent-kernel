@@ -2,7 +2,13 @@
 
 All notable changes to **agent-kernel** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
-this project follows an **independent SemVer line** (unstable `0.x` until a 2nd consumer reshapes the API).
+this project follows an **independent SemVer line**: unstable `0.x` until the 2nd consumer had exercised
+the API, frozen at `1.0` after the reshape review found no structural change needed (ADR-0014). Additive
+refinements ship as minors; a breaking change would batch into the next major.
+
+## [Unreleased]
+
+Nothing yet (`main` is `1.2.0-SNAPSHOT`).
 
 ## [1.1.0] — 2026-06-06
 
@@ -30,7 +36,12 @@ See **ADR-0015**.
 - **Deferred:** per-capability escalation posture (the slice-5 "soft" idea) — its own ADR if a second
   multi-capability consumer wants it.
 
-## [Unreleased]
+## [1.0.0] — 2026-06-06
+
+First stable release — the ring-1 API freeze (R1.6), gated by the R1.5 reshape review (**ADR-0014**):
+after the structurally different second consumer (the CxO agent) exercised the whole ring-1 surface
+across four slices, no type needed a breaking reshape, so the surface froze as-is. Contains everything
+from K0 (bootstrap) through R1.5.
 
 ### Added (K0 — bootstrap)
 - Multi-module Maven reactor: `agent-kernel-parent` + `agent-kernel-core` (ring 1),
@@ -61,11 +72,30 @@ See **ADR-0015**.
   `EvalCaseLoader` (jackson), `Evals.asTests` glue + self-test fixtures (test-jar).
 - 27 tests green (`./mvnw -B verify`) with zero apps; ring-1 still zero runtime deps.
 
+### Added (R1 — companion modules, driven by the 2nd consumer)
+- **`agent-orchestration`**: assembled synchronous orchestrator `SyncOrchestrator` (**ADR-0009**) and
+  result-granularity `StreamingOrchestrator` + `AgentStreamListener` (**ADR-0012**); `Orchestrations`
+  factories.
+- **`agent-kernel-spring`**: Spring Boot auto-configuration (`AgentKernelAutoConfiguration`) assembling
+  the ingredients into an injectable `SyncOrchestrator` (**ADR-0010**).
+- **`agent-provider-langchain4j`**: second `ModelProvider` — Google AI Gemini via LangChain4j
+  (`GeminiModelProvider`/`GeminiModelProfile`), confirming the model seam generalizes past Ollama with
+  no ring-1 change (**ADR-0011**).
+- **`agent-store-postgres`**: pgvector-backed `PgVectorRetriever` + ring-2 `EmbeddingModel` seam,
+  confirming the retrieval seam generalizes from lexical to vector with no ring-1 change (**ADR-0013**).
+
+### Changed (R1.5 — ring-1 reshape review, ADR-0014)
+- Ring-1 confirmed freeze-ready with **zero structural changes**; the only edit is a `CredibilityTier`
+  Javadoc clarification — declaration order is **not** a trust ranking; ranking stays an application
+  concern (supersedes the "ordered enum" facet of ADR-0004).
+- Token-level streaming (`ModelProvider`) and `EmbeddingModel` promotion to ring-1 re-classified as
+  additive-when-demanded — deferred, not `1.0` blockers.
+
 ### Design note
 - `AgentError` is a sealed **abstract class extending `RuntimeException`** (not a bare interface),
   so it can appear in `throws`/`catch` and be matched exhaustively — a deliberate, stronger choice
   than the plan's illustrative interface sketch.
 
-### Deferred to R1
-- Companion modules (`agent-kernel-spring`, `agent-store-postgres`, `agent-hitl`, `agent-orchestration`,
-  `agent-provider-langchain4j`), the assembled orchestrator, and the `1.0` API freeze.
+### Notes
+- `agent-hitl`, named in early plans, was never built as a separate module: the handoff decision lives in
+  ring-1 (`EscalationRung.HumanHandoff`) and the return path landed additively in `1.1` (**ADR-0015**).
